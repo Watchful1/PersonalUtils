@@ -3,6 +3,7 @@ import discord_logging
 import argparse
 import prometheus_client
 import time
+import os
 from datetime import datetime, timedelta
 
 log = discord_logging.init_logging()
@@ -16,6 +17,18 @@ log = discord_logging.init_logging()
 # notify when I hide a post
 # Total server disk space
 # Various folder sizes
+
+
+def get_size(start_path):
+	total_size = 0
+	for dir_path, dir_names, file_names in os.walk(start_path):
+		for f in file_names:
+			fp = os.path.join(dir_path, f)
+			# skip if it is symbolic link
+			if not os.path.islink(fp):
+				total_size += os.path.getsize(fp)
+
+	return total_size
 
 
 def parse_modmail_datetime(datetime_string):
@@ -36,8 +49,9 @@ if __name__ == "__main__":
 	reddit = praw.Reddit(args.user)
 
 	prometheus_client.start_http_server(8004)
-	prom_upvotes = prometheus_client.Counter("bot_upvotes", "Comment/post upvote counts", ['fullname'])
+	#prom_upvotes = prometheus_client.Counter("bot_upvotes", "Comment/post upvote counts", ['fullname'])
 	prom_inbox_size = prometheus_client.Gauge("bot_inbox_size", "Inbox size", ['type'])
+	prom_folder_size = prometheus_client.Gauge("bot_folder_size", "Folder size", ['name'])
 
 	log.info(f"Starting up: u/{args.user}")
 
@@ -48,6 +62,7 @@ if __name__ == "__main__":
 				log.info(f"Marking r/fakecollegefootball conversation {conversation.id} as read")
 				conversation.read()
 
+		# export inbox size
 		count_messages, count_comments = 0, 0
 		for inbox_item in reddit.inbox.unread(limit=None):
 			if inbox_item.fullname.startswith("t1_"):
@@ -58,6 +73,15 @@ if __name__ == "__main__":
 				log.warning(f"Unexpected item in inbox: {inbox_item.fullname}")
 		prom_inbox_size.labels(type="messages").set(count_messages)
 		prom_inbox_size.labels(type="comments").set(count_comments)
+
+		# export folder sizes
+		base_folder = "/home/watchful1"
+		for dir_path, dir_names, file_names in os.walk(base_folder):
+			for dir_name in dir_names:
+				if dir_name.startswith("."):
+					continue
+				folder_bytes = get_size(base_folder + "/" + dir_name)
+				prom_folder_size.labels(name=dir_name).set(folder_bytes / 1024 / 1024)
 
 		if args.once:
 			break
