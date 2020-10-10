@@ -1,0 +1,13 @@
+.idea/*
+logs/*
+games/*
+__pycache__/*
+*.db
+*.ini
+src/__pycache__/
+src/classes/__pycache__/
+src/database/__pycache__/
+src/dateparser/
+src/praw-wrapper/
+test/__pycache__/
+migration_3.py

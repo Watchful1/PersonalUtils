@@ -39,12 +39,25 @@ if __name__ == "__main__":
 	prom_upvotes = prometheus_client.Counter("bot_upvotes", "Comment/post upvote counts", ['fullname'])
 	prom_inbox_size = prometheus_client.Gauge("bot_inbox_size", "Inbox size", ['type'])
 
+	log.info(f"Starting up: u/{args.user}")
+
 	while True:
 		# mark r/fakecollegefootball modmails as read
 		for conversation in reddit.subreddit('fakecollegefootball').modmail.conversations(limit=10, state='all'):
 			if conversation_is_unread(conversation):
 				log.info(f"Marking r/fakecollegefootball conversation {conversation.id} as read")
 				conversation.read()
+
+		count_messages, count_comments = 0, 0
+		for inbox_item in reddit.inbox.unread(limit=None):
+			if inbox_item.fullname.startswith("t1_"):
+				count_comments += 1
+			elif inbox_item.fullname.startswith("t4_"):
+				count_messages += 1
+			else:
+				log.warning(f"Unexpected item in inbox: {inbox_item.fullname}")
+		prom_inbox_size.labels(type="messages").set(count_messages)
+		prom_inbox_size.labels(type="comments").set(count_comments)
 
 		if args.once:
 			break
