@@ -82,6 +82,7 @@ if __name__ == "__main__":
 					continue
 				folder_bytes = get_size(base_folder + "/" + dir_name)
 				prom_folder_size.labels(name=dir_name).set(folder_bytes / 1024 / 1024)
+			break
 
 		if args.once:
 			break
