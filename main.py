@@ -4,6 +4,7 @@ import argparse
 import prometheus_client
 import time
 import os
+import shutil
 from datetime import datetime, timedelta
 
 log = discord_logging.init_logging()
@@ -52,6 +53,7 @@ if __name__ == "__main__":
 	#prom_upvotes = prometheus_client.Counter("bot_upvotes", "Comment/post upvote counts", ['fullname'])
 	prom_inbox_size = prometheus_client.Gauge("bot_inbox_size", "Inbox size", ['type'])
 	prom_folder_size = prometheus_client.Gauge("bot_folder_size", "Folder size", ['name'])
+	prom_hard_drive_size = prometheus_client.Gauge("bot_hard_drive_size", "Hard drive size")
 
 	log.info(f"Starting up: u/{args.user}")
 
@@ -83,6 +85,10 @@ if __name__ == "__main__":
 				folder_bytes = get_size(base_folder + "/" + dir_name)
 				prom_folder_size.labels(name=dir_name).set(folder_bytes / 1024 / 1024)
 			break
+
+		# export hard drive space
+		total, used, free = shutil.disk_usage("/")
+		prom_hard_drive_size.set(used // (2**30))
 
 		if args.once:
 			break
