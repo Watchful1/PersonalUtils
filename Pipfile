@@ -9,6 +9,7 @@ verify_ssl = true
 praw = "*"
 discord-logging = {git = "https://github.com/Watchful1/DiscordLogging.git"}
 prometheus-client = "*"
+sqlalchemy = "*"
 
 [requires]
 python_version = "3.7"
