@@ -64,7 +64,7 @@ def main(reddit):
 
 		database.session.merge(
 			Comment(
-				comment.id,
+				comment['id'],
 				datetime.utcfromtimestamp(comment['created_utc']),
 				datetime.utcfromtimestamp(comment['retrieved_utc'])
 			)
