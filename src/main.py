@@ -7,6 +7,8 @@ import os
 import shutil
 import traceback
 import requests
+import sys
+import signal
 from datetime import datetime, timedelta
 
 log = discord_logging.init_logging()
@@ -15,6 +17,16 @@ import database
 import utils
 import counters
 from database import Comment
+
+
+def signal_handler(signal, frame):
+	log.info("Handling interrupt")
+	database.session.close()
+	discord_logging.flush_discord()
+	sys.exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 # Post when a comment from me hits upvote thresholds, track recent comments upvote count over time
