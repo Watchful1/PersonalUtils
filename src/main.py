@@ -83,10 +83,10 @@ def main(reddit):
 		)
 
 	# now get old pushshift comments and compare
-	for comment in utils.get_keyword_comments("remindme", "https://api.pushshift.io/reddit/comment/search", 100):
-		if database.session.query(Comment).filter_by(id=comment['id']).count() == 0:
-			log.info(f"Missing comment: {comment['id']}")
-			counters.pushshift_missing_beta_comments.inc()
+	# for comment in utils.get_keyword_comments("remindme", "https://api.pushshift.io/reddit/comment/search", 100):
+	# 	if database.session.query(Comment).filter_by(id=comment['id']).count() == 0:
+	# 		log.info(f"Missing comment: {comment['id']}")
+	# 		counters.pushshift_missing_beta_comments.inc()
 
 	# beta ingest lag
 	comments = utils.get_keyword_comments(None, "https://beta.pushshift.io/search/reddit/comments", 1)
