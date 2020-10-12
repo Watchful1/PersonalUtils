@@ -48,15 +48,15 @@ def get_keyword_comments(keyword, base_url, limit):
 	try:
 		response = requests.get(url, headers={'User-Agent': "Remind me tester"}, timeout=10)
 		if response.status_code != 200:
-			log.warning(f"Pushshift error: {response.status_code}")
+			log.warning(f"Pushshift error: {response.status_code} : {url}")
 			return []
 		return response.json()['data']
 
 	except requests.exceptions.ReadTimeout:
-		log.warning(f"Pushshift timeout")
+		log.warning(f"Pushshift timeout : {url}")
 		return []
 
 	except Exception as err:
-		log.warning(f"Could not parse data for search term: {keyword}")
+		log.warning(f"Could not parse data for search term: {keyword} : {url}")
 		log.warning(traceback.format_exc())
 		return []
