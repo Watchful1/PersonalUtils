@@ -6,6 +6,7 @@ hard_drive_size = prometheus_client.Gauge("bot_hard_drive_size", "Hard drive siz
 pushshift_beta_lag = prometheus_client.Gauge("bot_pushshift_beta_lag", "Pushshift beta endpoint lag")
 pushshift_old_lag = prometheus_client.Gauge("bot_pushshift_old_lag", "Pushshift old endpoint lag")
 pushshift_missing_beta_comments = prometheus_client.Counter("bot_pushshift_beta_missing", "Pushshift beta endpoint missing a comment")
+scan_seconds = prometheus_client.Summary('bot_pushshift_scan_seconds', "How many seconds pushshift takes to respond", ['service'])
 
 
 def init(port):

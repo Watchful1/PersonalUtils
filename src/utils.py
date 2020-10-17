@@ -3,6 +3,7 @@ import discord_logging
 import prawcore
 import requests
 import traceback
+import time
 from datetime import datetime
 
 log = discord_logging.get_logger()
@@ -43,20 +44,21 @@ def conversation_is_unread(conversation):
 				parse_modmail_datetime(conversation.last_updated)
 
 
-def get_keyword_comments(keyword, base_url, limit):
-	url = f"{base_url}?{('' if keyword is None else 'q='+keyword)}&limit={limit}&sort=desc"
+def get_keyword_comments(keyword, base_url, limit, size_keyword):
+	url = f"{base_url}?{('' if keyword is None else 'q='+keyword)}&{size_keyword}={limit}&sort=desc"
 	try:
+		start_time = time.perf_counter()
 		response = requests.get(url, headers={'User-Agent': "Remind me tester"}, timeout=10)
 		if response.status_code != 200:
 			log.warning(f"Pushshift error: {response.status_code} : {url}")
-			return []
-		return response.json()['data']
+			return [], 10
+		return response.json()['data'], round(time.perf_counter() - start_time, 2)
 
 	except requests.exceptions.ReadTimeout:
 		log.warning(f"Pushshift timeout : {url}")
-		return []
+		return [], 10
 
 	except Exception as err:
 		log.warning(f"Could not parse data for search term: {keyword} : {url}")
 		log.warning(traceback.format_exc())
-		return []
+		return [], 10

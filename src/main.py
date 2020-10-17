@@ -35,7 +35,7 @@ signal.signal(signal.SIGINT, signal_handler)
 # notify when I hide a post
 
 
-def main(reddit):
+def main(reddit, missing_comment_ids):
 	# mark r/fakecollegefootball modmails as read
 	for conversation in reddit.subreddit('fakecollegefootball').modmail.conversations(limit=10, state='all'):
 		if utils.conversation_is_unread(conversation):
@@ -70,7 +70,10 @@ def main(reddit):
 
 	# pushshift beta tracking
 	# get beta comments
-	for comment in utils.get_keyword_comments("remindme", "https://beta.pushshift.io/search/reddit/comments", 100):
+	comments_added = []
+	comments, seconds = utils.get_keyword_comments("remindme", "https://beta.pushshift.io/search/reddit/comments", 100, "size")
+	counters.scan_seconds.labels("beta").observe(seconds)
+	for comment in comments:
 		if database.session.query(Comment).filter_by(id=comment['id']).count() > 0:
 			break
 
@@ -81,20 +84,26 @@ def main(reddit):
 				datetime.utcfromtimestamp(comment['retrieved_utc'])
 			)
 		)
+		comments_added.append(comment['id'])
+	if len(comments_added) > 0:
+		log.info(f"Added comments: {','.join(comments_added)}")
 
 	# now get old pushshift comments and compare
-	# for comment in utils.get_keyword_comments("remindme", "https://api.pushshift.io/reddit/comment/search", 100):
-	# 	if database.session.query(Comment).filter_by(id=comment['id']).count() == 0:
-	# 		log.info(f"Missing comment: {comment['id']}")
-	# 		counters.pushshift_missing_beta_comments.inc()
+	comments, seconds = utils.get_keyword_comments("remindme", "https://api.pushshift.io/reddit/comment/search", 100, "limit")
+	counters.scan_seconds.labels("prod").observe(seconds)
+	for comment in comments:
+		if comment['id'] not in missing_comment_ids and database.session.query(Comment).filter_by(id=comment['id']).count() == 0:
+			log.info(f"Missing comment: {comment['id']}")
+			missing_comment_ids.add(comment['id'])
+			counters.pushshift_missing_beta_comments.inc()
 
 	# beta ingest lag
-	comments = utils.get_keyword_comments(None, "https://beta.pushshift.io/search/reddit/comments", 1)
+	comments, seconds = utils.get_keyword_comments(None, "https://beta.pushshift.io/search/reddit/comments", 1, "size")
 	if len(comments):
 		counters.pushshift_beta_lag.set(round((datetime.utcnow() - datetime.utcfromtimestamp(comments[0]['created_utc'])).total_seconds() / 60, 0))
 
 	# old ingest lag
-	comments = utils.get_keyword_comments(None, "https://api.pushshift.io/reddit/comment/search", 1)
+	comments, seconds = utils.get_keyword_comments(None, "https://api.pushshift.io/reddit/comment/search", 1, "limit")
 	if len(comments):
 		counters.pushshift_old_lag.set(round((datetime.utcnow() - datetime.utcfromtimestamp(comments[0]['created_utc'])).total_seconds() / 60, 0))
 
@@ -116,9 +125,10 @@ if __name__ == "__main__":
 
 	log.info(f"Starting up: u/{args.user}")
 
+	missing_comment_ids = set()
 	while True:
 		try:
-			main(reddit)
+			main(reddit, missing_comment_ids)
 		except Exception as err:
 			utils.process_error(f"Error in main loop", err, traceback.format_exc())
 
