@@ -85,8 +85,8 @@ def main(reddit, missing_comment_ids):
 			)
 		)
 		comments_added.append(comment['id'])
-	if len(comments_added) > 0:
-		log.info(f"Added comments: {','.join(comments_added)}")
+	# if len(comments_added) > 0:
+	# 	log.info(f"Added comments: {','.join(comments_added)}")
 
 	# now get old pushshift comments and compare
 	comments, seconds = utils.get_keyword_comments("remindme", "https://api.pushshift.io/reddit/comment/search", 100, "limit")
