@@ -28,7 +28,6 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-# Track total karma
 # Post on r/all under a certain age
 # get the latest comment/post id to count how many comments/posts there are per hour
 

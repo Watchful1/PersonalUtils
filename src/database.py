@@ -28,7 +28,7 @@ class RedditObject(Base):
 		return int(round(total / len(self.scores), 0))
 
 	def record_score(self, score):
-		if len(self.scores) >= 7:
+		if len(self.scores) >= 25:
 			self.scores.pop(0)
 		self.scores.append(Score(score))
 
