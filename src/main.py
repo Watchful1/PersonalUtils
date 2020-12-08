@@ -16,7 +16,6 @@ log = discord_logging.init_logging()
 import database
 import utils
 import counters
-from database import Comment
 
 
 def signal_handler(signal, frame):
@@ -34,7 +33,7 @@ signal.signal(signal.SIGINT, signal_handler)
 # get the latest comment/post id to count how many comments/posts there are per hour
 
 
-def main(reddit, missing_comment_ids):
+def main(reddit):
 	# mark r/fakecollegefootball modmails as read
 	for conversation in reddit.subreddit('fakecollegefootball').modmail.conversations(limit=10, state='all'):
 		if utils.conversation_is_unread(conversation):
@@ -67,6 +66,19 @@ def main(reddit, missing_comment_ids):
 	total, used, free = shutil.disk_usage("/")
 	counters.hard_drive_size.set(round(used / (2 ** 30), 2))
 
+	count_objects_to_track = 25
+	# get comment scores
+	for reddit_comment in reversed(list(reddit.user.me().comments.new(limit=count_objects_to_track))):
+		utils.process_reddit_object(reddit_comment, "comment", database, counters)
+
+	# get post scores
+	for reddit_submission in reversed(list(reddit.user.me().submissions.new(limit=count_objects_to_track))):
+		utils.process_reddit_object(reddit_submission, "submission", database, counters)
+
+	# delete old objects
+	utils.delete_old_objects("comment", database, counters, count_objects_to_track)
+	utils.delete_old_objects("submission", database, counters, count_objects_to_track)
+
 	database.session.commit()
 	discord_logging.flush_discord()
 
@@ -85,14 +97,14 @@ if __name__ == "__main__":
 
 	log.info(f"Starting up: u/{args.user}")
 
-	missing_comment_ids = set()
 	while True:
 		try:
-			main(reddit, missing_comment_ids)
+			main(reddit)
 		except Exception as err:
 			utils.process_error(f"Error in main loop", err, traceback.format_exc())
 
 		if args.once:
+			database.session.close()
 			break
 
 		time.sleep(60)

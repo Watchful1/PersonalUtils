@@ -8,6 +8,8 @@ from datetime import datetime
 
 log = discord_logging.get_logger()
 
+from database import RedditObject
+
 
 def process_error(message, exception, traceback):
 	is_transient = \
@@ -62,3 +64,31 @@ def get_keyword_comments(keyword, base_url, limit, size_keyword):
 		log.warning(f"Could not parse data for search term: {keyword} : {url}")
 		log.warning(traceback.format_exc())
 		return [], 10
+
+
+def process_reddit_object(reddit_object, object_type, database, counters):
+	db_object = database.session.query(RedditObject)\
+		.filter_by(object_type=object_type)\
+		.filter_by(object_id=reddit_object.id)\
+		.first()
+	if db_object is None:
+		log.info(f"New {object_type} {reddit_object.id}")
+		db_object = RedditObject(reddit_object.id, object_type, reddit_object.score)
+		database.session.add(db_object)
+	else:
+		db_object.record_score(reddit_object.score)
+
+	counters.scores.labels(id=db_object.object_id, type=db_object.object_type).set(db_object.get_avg_score())
+
+
+def delete_old_objects(object_type, database, counters, limit):
+	db_objects = database.session.query(RedditObject)\
+		.filter_by(object_type=object_type)\
+		.order_by(RedditObject.id.desc())\
+		.all()
+
+	if len(db_objects) > limit:
+		object_to_remove = db_objects[-1]
+		log.info(f"Removing old {object_type} {object_to_remove.object_id}")
+		counters.scores.remove(object_to_remove.object_id, object_to_remove.object_type)
+		database.session.delete(object_to_remove)

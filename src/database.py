@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, String, DateTime
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, Column, String, DateTime, Integer, ForeignKey
+from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 
 Base = declarative_base()
@@ -8,17 +8,46 @@ engine = None
 session = None
 
 
-class Comment(Base):
-	__tablename__ = 'comments'
+class RedditObject(Base):
+	__tablename__ = 'objects'
 
-	id = Column(String(60), primary_key=True)
-	created = Column(DateTime, nullable=False)
-	retrieved = Column(DateTime, nullable=False)
+	id = Column(Integer, primary_key=True)
+	object_id = Column(String(60), nullable=False)
+	object_type = Column(String(60), nullable=False)
+	scores = relationship("Score")
 
-	def __init__(self, id, created, retrieved):
-		self.id = id
-		self.created = created
-		self.retrieved = retrieved
+	def __init__(self, object_id, object_type, score):
+		self.object_id = object_id
+		self.object_type = object_type
+		self.scores = [Score(score)]
+
+	def get_avg_score(self):
+		total = 0
+		for score in self.scores:
+			total += score.score
+		return int(round(total / len(self.scores), 0))
+
+	def record_score(self, score):
+		if len(self.scores) >= 7:
+			self.scores.pop(0)
+		self.scores.append(Score(score))
+
+	def __str__(self):
+		return f"{self.object_id} : {self.get_avg_score()} : "+','.join([str(score) for score in self.scores])
+
+
+class Score(Base):
+	__tablename__ = 'scores'
+
+	id = Column(Integer, primary_key=True)
+	score = Column(Integer, nullable=False)
+	object_id = Column(Integer, ForeignKey('objects.id'))
+
+	def __init__(self, score):
+		self.score = score
+
+	def __str__(self):
+		return str(self.score)
 
 
 def init():
