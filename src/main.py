@@ -28,7 +28,7 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-# Post when a comment from me hits upvote thresholds, track recent comments upvote count over time
+# Track total karma
 # Post on r/all under a certain age
 # get the latest comment/post id to count how many comments/posts there are per hour
 
@@ -78,6 +78,10 @@ def main(reddit):
 	# delete old objects
 	utils.delete_old_objects("comment", database, counters, count_objects_to_track)
 	utils.delete_old_objects("submission", database, counters, count_objects_to_track)
+
+	# get karma totals
+	counters.karma.labels(type="comment").set(reddit.user.me().comment_karma)
+	counters.karma.labels(type="submission").set(reddit.user.me().link_karma)
 
 	database.session.commit()
 	discord_logging.flush_discord()
