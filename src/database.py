@@ -31,7 +31,15 @@ class RedditObject(Base):
 		return int(round(total / len(self.scores), 0))
 
 	def record_score(self, score):
-		if len(self.scores) >= 25:
+		if score < 50:
+			count_scores = 25
+		elif score < 200:
+			count_scores = 50
+		elif score < 500:
+			count_scores = 75
+		else:
+			count_scores = 100
+		if len(self.scores) >= count_scores:
 			old_average = self.get_avg_score()
 			self.scores.pop(0)
 			self.scores.append(Score(score))
