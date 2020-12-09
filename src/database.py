@@ -2,6 +2,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, Column, String, DateTime, Integer, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
+import discord_logging
+
+log = discord_logging.get_logger()
 
 Base = declarative_base()
 engine = None
@@ -29,8 +32,14 @@ class RedditObject(Base):
 
 	def record_score(self, score):
 		if len(self.scores) >= 25:
+			old_average = self.get_avg_score()
 			self.scores.pop(0)
-		self.scores.append(Score(score))
+			self.scores.append(Score(score))
+			new_average = self.get_avg_score()
+			if old_average != new_average:
+				log.warning(f"{self.object_type} {self.object_id} from {old_average} to {new_average}")
+		else:
+			self.scores.append(Score(score))
 
 	def __str__(self):
 		return f"{self.object_id} : {self.get_avg_score()} : "+','.join([str(score) for score in self.scores])

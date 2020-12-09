@@ -9,6 +9,7 @@ import traceback
 import requests
 import sys
 import signal
+import logging.handlers
 from datetime import datetime, timedelta
 
 log = discord_logging.init_logging()
@@ -93,6 +94,7 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 
 	reddit = praw.Reddit(args.user)
+	discord_logging.init_discord_logging(args.user, logging.WARNING, 1)
 
 	counters.init(8004)
 
@@ -105,6 +107,8 @@ if __name__ == "__main__":
 			main(reddit)
 		except Exception as err:
 			utils.process_error(f"Error in main loop", err, traceback.format_exc())
+
+		discord_logging.flush_discord()
 
 		if args.once:
 			database.session.close()
