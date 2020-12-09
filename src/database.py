@@ -31,9 +31,9 @@ class RedditObject(Base):
 		return int(round(total / len(self.scores), 0))
 
 	def record_score(self, score):
-		if score < 50:
+		if score < 10:
 			count_scores = 25
-		elif score < 200:
+		elif score < 100:
 			count_scores = 50
 		elif score < 500:
 			count_scores = 75
