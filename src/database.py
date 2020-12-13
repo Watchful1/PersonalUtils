@@ -18,11 +18,13 @@ class RedditObject(Base):
 	object_id = Column(String(60), nullable=False)
 	object_type = Column(String(60), nullable=False)
 	scores = relationship("Score")
+	time_created = Column(DateTime(), nullable=False)
 
 	def __init__(self, object_id, object_type, score):
 		self.object_id = object_id
 		self.object_type = object_type
 		self.scores = [Score(score)]
+		self.time_created = datetime.utcnow()
 
 	def get_avg_score(self):
 		total = 0

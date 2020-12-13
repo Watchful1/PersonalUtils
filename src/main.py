@@ -68,16 +68,16 @@ def main(reddit):
 
 	count_objects_to_track = 25
 	# get comment scores
-	for reddit_comment in reversed(list(reddit.user.me().comments.new(limit=count_objects_to_track))):
+	for reddit_comment in reversed(list(reddit.user.me().comments.new(limit=50))):
 		utils.process_reddit_object(reddit_comment, "comment", database, counters)
 
 	# get post scores
-	for reddit_submission in reversed(list(reddit.user.me().submissions.new(limit=count_objects_to_track))):
+	for reddit_submission in reversed(list(reddit.user.me().submissions.new(limit=10))):
 		utils.process_reddit_object(reddit_submission, "submission", database, counters)
 
 	# delete old objects
-	utils.delete_old_objects("comment", database, counters, count_objects_to_track)
-	utils.delete_old_objects("submission", database, counters, count_objects_to_track)
+	utils.delete_old_objects("comment", database, counters, 24 * 2)
+	utils.delete_old_objects("submission", database, counters, 24 * 5)
 
 	# get karma totals
 	counters.karma.labels(type="comment").set(reddit.user.me().comment_karma)

@@ -4,7 +4,7 @@ import prawcore
 import requests
 import traceback
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 log = discord_logging.get_logger()
 
@@ -81,14 +81,15 @@ def process_reddit_object(reddit_object, object_type, database, counters):
 	counters.scores.labels(id=db_object.object_id, type=db_object.object_type).set(db_object.get_avg_score())
 
 
-def delete_old_objects(object_type, database, counters, limit):
+def delete_old_objects(object_type, database, counters, hours):
+	before_date = datetime.utcnow() - timedelta(hours=hours)
+
 	db_objects = database.session.query(RedditObject)\
 		.filter_by(object_type=object_type)\
-		.order_by(RedditObject.id.desc())\
+		.filter(RedditObject.time_created < before_date)\
 		.all()
 
-	if len(db_objects) > limit:
-		object_to_remove = db_objects[-1]
-		log.info(f"Removing old {object_type} {object_to_remove.object_id}")
-		counters.scores.remove(object_to_remove.object_id, object_to_remove.object_type)
-		database.session.delete(object_to_remove)
+	for db_object in db_objects:
+		log.info(f"Removing old {object_type} {db_object.object_id}")
+		counters.scores.remove(db_object.object_id, db_object.object_type)
+		database.session.delete(db_object)
