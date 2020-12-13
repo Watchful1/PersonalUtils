@@ -69,11 +69,13 @@ def main(reddit):
 	count_objects_to_track = 25
 	# get comment scores
 	for reddit_comment in reversed(list(reddit.user.me().comments.new(limit=50))):
-		utils.process_reddit_object(reddit_comment, "comment", database, counters)
+		if datetime.utcfromtimestamp(reddit_comment.created_utc) > datetime.utcnow() - timedelta(hours=24 * 2):
+			utils.process_reddit_object(reddit_comment, "comment", database, counters)
 
 	# get post scores
 	for reddit_submission in reversed(list(reddit.user.me().submissions.new(limit=10))):
-		utils.process_reddit_object(reddit_submission, "submission", database, counters)
+		if datetime.utcfromtimestamp(reddit_submission.created_utc) > datetime.utcnow() - timedelta(hours=24 * 5):
+			utils.process_reddit_object(reddit_submission, "submission", database, counters)
 
 	# delete old objects
 	utils.delete_old_objects("comment", database, counters, 24 * 2)
