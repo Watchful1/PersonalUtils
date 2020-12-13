@@ -47,7 +47,7 @@ class RedditObject(Base):
 			self.scores.append(Score(score))
 			new_average = self.get_avg_score()
 			if old_average != new_average:
-				log.warning(f"{self.object_type} {self.object_id} from {old_average} to {new_average}")
+				log.info(f"{self.object_type} {self.object_id} from {old_average} to {new_average}")
 		else:
 			self.scores.append(Score(score))
 
