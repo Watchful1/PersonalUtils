@@ -91,5 +91,8 @@ def delete_old_objects(object_type, database, counters, hours):
 
 	for db_object in db_objects:
 		log.info(f"Removing old {object_type} {db_object.object_id}")
-		counters.scores.remove(db_object.object_id, db_object.object_type)
+		try:
+			counters.scores.remove(db_object.object_id, db_object.object_type)
+		except KeyError:
+			pass
 		database.session.delete(db_object)
