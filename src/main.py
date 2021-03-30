@@ -82,8 +82,10 @@ def main(reddit):
 	utils.delete_old_objects("submission", database, counters, 24 * 5)
 
 	# get karma totals
-	counters.karma.labels(type="comment").set(reddit.user.me().comment_karma)
-	counters.karma.labels(type="submission").set(reddit.user.me().link_karma)
+	me = reddit.user.me()
+	me._fetch()
+	counters.karma.labels(type="comment").set(me.comment_karma)
+	counters.karma.labels(type="submission").set(me.link_karma)
 
 	database.session.commit()
 	discord_logging.flush_discord()
