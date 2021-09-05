@@ -1,12 +1,11 @@
 import praw
 import discord_logging
 import argparse
-import prometheus_client
 import time
 import os
 import shutil
 import traceback
-import requests
+import prawcore
 import sys
 import signal
 import logging.handlers
@@ -31,6 +30,20 @@ signal.signal(signal.SIGINT, signal_handler)
 
 # Post on r/all under a certain age
 # get the latest comment/post id to count how many comments/posts there are per hour
+
+
+account_list = [
+	{'username': "RemindMeBot", 'banned': False, 'checked': None, 'posted': None},
+	{'username': "UpdateMeBot", 'banned': False, 'checked': None, 'posted': None},
+	{'username': "NFCAAOfficialRefBot", 'banned': False, 'checked': None, 'posted': None},
+	{'username': "OWMatchThreads", 'banned': False, 'checked': None, 'posted': None},
+	{'username': "Watchful1BotTest", 'banned': False, 'checked': None, 'posted': None},
+	{'username': "Watchful1Bot", 'banned': False, 'checked': None, 'posted': None},
+	{'username': "Watchful12", 'banned': False, 'checked': None, 'posted': None},
+	{'username': "RainbowPointsBot", 'banned': False, 'checked': None, 'posted': None},
+	{'username': "NCAABBallPoster", 'banned': False, 'checked': None, 'posted': None},
+	{'username': "CustomModBot", 'banned': False, 'checked': None, 'posted': None},
+]
 
 
 def main(reddit):
@@ -86,6 +99,22 @@ def main(reddit):
 	me._fetch()
 	counters.karma.labels(type="comment").set(me.comment_karma)
 	counters.karma.labels(type="submission").set(me.link_karma)
+
+	# check accounts for shadowbans
+	for account in account_list:
+		if account['banned'] or account['checked'] is None or account['checked'] < datetime.utcnow() - timedelta(minutes=60):
+			try:
+				fullname = reddit.redditor(account['username']).fullname
+				if account['banned']:
+					log.warning(f"u/{account['username']} has been unbanned")
+					account['banned'] = False
+			except prawcore.exceptions.NotFound:
+				if not account['banned'] or account['posted'] is None or account['posted'] < datetime.utcnow() - timedelta(hours=24):
+					log.warning(f"u/{account['username']} has been shadowbanned")
+					account['banned'] = True
+					account['posted'] = datetime.utcnow()
+
+			account['checked'] = datetime.utcnow()
 
 	database.session.commit()
 	discord_logging.flush_discord()
