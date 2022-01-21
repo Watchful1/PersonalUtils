@@ -103,6 +103,7 @@ def main(reddit):
 	# check accounts for shadowbans
 	for account in account_list:
 		if account['banned'] or account['checked'] is None or account['checked'] < datetime.utcnow() - timedelta(minutes=60):
+			msg = None
 			try:
 				fullname = reddit.redditor(account['username']).fullname
 				if account['banned']:
@@ -110,9 +111,14 @@ def main(reddit):
 					account['banned'] = False
 			except prawcore.exceptions.NotFound:
 				if not account['banned'] or account['posted'] is None or account['posted'] < datetime.utcnow() - timedelta(hours=24):
-					log.warning(f"u/{account['username']} has been shadowbanned")
-					account['banned'] = True
-					account['posted'] = datetime.utcnow()
+					msg = f"u/{account['username']} has been shadowbanned"
+			except AttributeError:
+				if not account['banned'] or account['posted'] is None or account['posted'] < datetime.utcnow() - timedelta(hours=24):
+					msg = f"u/{account['username']} has been banned"
+			if msg is not None:
+				log.warning(f"u/{account['username']} has been banned")
+				account['banned'] = True
+				account['posted'] = datetime.utcnow()
 
 			account['checked'] = datetime.utcnow()
 
