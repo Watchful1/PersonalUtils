@@ -125,12 +125,12 @@ def main(reddit):
 
 	# post in announcements
 	newest_post = next(reddit.subreddit("reddit").new())
-	saved_post_id = database.session.query(database.KeyValue).filter_by(key="reddit_post").first().value
-	if saved_post_id is None:
+	key_value = database.session.query(database.KeyValue).filter_by(key="reddit_post").first()
+	if key_value is None:
 		log.info(f"First saving post id: {newest_post.id}")
 		database.session.merge(database.KeyValue("reddit_post", newest_post.id))
 	else:
-		if saved_post_id != newest_post.id:
+		if key_value.value != newest_post.id:
 			log.warning(f"Posting on r/reddit post: <http://www.reddit.com{newest_post.permalink}>")
 			try:
 				comment_result = newest_post.reply(
