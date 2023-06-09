@@ -127,6 +127,7 @@ def main(reddit):
 	newest_post = next(reddit.subreddit("reddit").new())
 	saved_post_id = database.session.query(database.KeyValue).filter_by(key="reddit_post").first().value
 	if saved_post_id is None:
+		log.info(f"First saving post id: {newest_post.id}")
 		database.session.merge(database.KeyValue("reddit_post", newest_post.id))
 	else:
 		if saved_post_id != newest_post.id:
