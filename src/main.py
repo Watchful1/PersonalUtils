@@ -125,12 +125,12 @@ def main(reddit):
 
 	# post in announcements
 	newest_post = next(reddit.subreddit("subtestbot1").new())
-	key_value = database.session.query(database.KeyValue).filter_by(key="reddit_post").first()
-	log.info(f"checking post {newest_post.id} : {key_value}")
-	if key_value is None:
+	saved_post_id = database.session.query(database.KeyValue).filter_by(key="reddit_post").first().value
+	log.info(f"checking post {newest_post.id} : {saved_post_id}")
+	if saved_post_id is None:
 		database.session.merge(database.KeyValue("reddit_post", newest_post.id))
 	else:
-		if key_value != newest_post.id:
+		if saved_post_id != newest_post.id:
 			log.warning(f"Posting on r/reddit post: <http://www.reddit.com{newest_post.permalink}>")
 			comment_result = newest_post.reply(
 				'''Thanks for answering questions Spez. There's a lot of anger going around over the decisions, but I'd like to try to ask something productive.
@@ -141,7 +141,7 @@ Has reddit done any work over the last year or two to ask these third party app 
 
 Reddit has said a fair bit over the last few days about mod tools that are coming and accessibility issues, so I'd like to say I'm specifically not talking about those and am asking about the ordinary browsing experience of regular users.'''
 			)
-			log.warning(f"@watchful1Posted: <http://www.reddit.com{comment_result.permalink}>")
+			log.warning(f"<@95296130761371648> Posted: <http://www.reddit.com{comment_result.permalink}>")
 			database.session.merge(database.KeyValue("reddit_post", newest_post.id))
 
 	database.session.commit()
