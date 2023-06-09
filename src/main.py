@@ -124,7 +124,7 @@ def main(reddit):
 			account['checked'] = datetime.utcnow()
 
 	# post in announcements
-	newest_post = next(reddit.subreddit("subtestbot1").new())
+	newest_post = next(reddit.subreddit("reddit").new())
 	saved_post_id = database.session.query(database.KeyValue).filter_by(key="reddit_post").first().value
 	if saved_post_id is None:
 		database.session.merge(database.KeyValue("reddit_post", newest_post.id))
