@@ -124,28 +124,28 @@ def main(reddit):
 			account['checked'] = datetime.utcnow()
 
 	# post in announcements
-	newest_post = next(reddit.subreddit("reddit").new())
-	key_value = database.session.query(database.KeyValue).filter_by(key="reddit_post").first()
-	if key_value is None:
-		log.info(f"First saving post id: {newest_post.id}")
-		database.session.merge(database.KeyValue("reddit_post", newest_post.id))
-	else:
-		if key_value.value != newest_post.id:
-			log.warning(f"Posting on r/reddit post: <http://www.reddit.com{newest_post.permalink}>")
-			try:
-				comment_result = newest_post.reply(
-					'''Thanks for answering questions Spez. There's a lot of anger going around over the decisions, but I'd like to try to ask something productive.
-	
-	If you look at any of the announcement threads from the third party app devs or subreddits announcing blackouts, the most common sentiment has been that people love the experience they get on their chosen apps and dislike the experience on the official app. To the point of saying they won't use the official app at all if their chosen app shuts down.
-	
-	Has reddit done any work over the last year or two to ask these third party app users what specifically they like about their chosen app and tried to build it into the official app? In my reading most of the differences have been relatively simple things like use of screen space and number of button clicks to complete certain actions, stuff that could be built in a matter of a month or two.
-	
-	Reddit has said a fair bit over the last few days about mod tools that are coming and accessibility issues, so I'd like to say I'm specifically not talking about those and am asking about the ordinary browsing experience of regular users.'''
-				)
-				log.warning(f"<@95296130761371648> Posted: <http://www.reddit.com{comment_result.permalink}>")
-				database.session.merge(database.KeyValue("reddit_post", newest_post.id))
-			except Exception as err:
-				log.warning(f"Failed to comment on post <http://www.reddit.com{newest_post.permalink}> : {err}")
+# 	newest_post = next(reddit.subreddit("reddit").new())
+# 	key_value = database.session.query(database.KeyValue).filter_by(key="reddit_post").first()
+# 	if key_value is None:
+# 		log.info(f"First saving post id: {newest_post.id}")
+# 		database.session.merge(database.KeyValue("reddit_post", newest_post.id))
+# 	else:
+# 		if key_value.value != newest_post.id:
+# 			log.warning(f"Posting on r/reddit post: <http://www.reddit.com{newest_post.permalink}>")
+# 			try:
+# 				comment_result = newest_post.reply(
+# 					'''Thanks for answering questions Spez. There's a lot of anger going around over the decisions, but I'd like to try to ask something productive.
+#
+# If you look at any of the announcement threads from the third party app devs or subreddits announcing blackouts, the most common sentiment has been that people love the experience they get on their chosen apps and dislike the experience on the official app. To the point of saying they won't use the official app at all if their chosen app shuts down.
+#
+# Has reddit done any work over the last year or two to ask these third party app users what specifically they like about their chosen app and tried to build it into the official app? In my reading most of the differences have been relatively simple things like use of screen space and number of button clicks to complete certain actions, stuff that could be built in a matter of a month or two.
+#
+# Reddit has said a fair bit over the last few days about mod tools that are coming and accessibility issues, so I'd like to say I'm specifically not talking about those and am asking about the ordinary browsing experience of regular users.'''
+# 				)
+# 				log.warning(f"<@95296130761371648> Posted: <http://www.reddit.com{comment_result.permalink}>")
+# 				database.session.merge(database.KeyValue("reddit_post", newest_post.id))
+# 			except Exception as err:
+# 				log.warning(f"Failed to comment on post <http://www.reddit.com{newest_post.permalink}> : {err}")
 
 	database.session.commit()
 	discord_logging.flush_discord()
