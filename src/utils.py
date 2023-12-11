@@ -46,7 +46,7 @@ def parse_modmail_datetime(datetime_string):
 
 
 def conversation_is_unread(conversation):
-	return conversation.last_unread is not None and parse_modmail_datetime(conversation.last_unread) > \
+	return conversation.last_unread is not None and parse_modmail_datetime(conversation.last_unread) >= \
 				parse_modmail_datetime(conversation.last_updated)
 
 
