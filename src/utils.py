@@ -38,7 +38,11 @@ def get_size(start_path):
 
 
 def parse_modmail_datetime(datetime_string):
-	return datetime.strptime(datetime_string, "%Y-%m-%dT%H:%M:%S.%f+00:00")
+	try:
+		return datetime.strptime(datetime_string, "%Y-%m-%dT%H:%M:%S.%f+00:00")
+	except ValueError:
+		return datetime.strptime(datetime_string, "%Y-%m-%dT%H:%M:%S.%f+0000")
+
 
 
 def conversation_is_unread(conversation):
