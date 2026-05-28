@@ -48,12 +48,6 @@ account_list = [
 
 
 def main(reddit):
-	# mark r/fakecollegefootball modmails as read
-	for conversation in reddit.subreddit('fakecollegefootball').modmail.conversations(limit=10, state='all'):
-		if utils.conversation_is_unread(conversation):
-			log.info(f"Marking r/fakecollegefootball conversation {conversation.id} as read")
-			conversation.read()
-
 	# export inbox size
 	count_messages, count_comments = 0, 0
 	for inbox_item in reddit.inbox.unread(limit=None):
